@@ -84,7 +84,32 @@ qcApi.verifyAuthenticated = function(){
 * @param {obj} Should be a javascript object returned from the node-rest-client, parsed from a REST call xml or json response
 */
 qcApi.convertResult = function(obj){
-	return obj;
+
+	if(obj.Entities == undefined)
+		return obj;
+
+	var result = [];
+
+	obj.Entities.Entity.forEach(function(entity){
+
+		var convertedEntity = {
+			type: entity['$'].Type
+		};
+
+		entity.Fields[0].Field.forEach(function(field){
+
+			var name = field['$'].Name;
+			var value = field.Value[0];
+			convertedEntity[name] = value;
+		});
+
+		result.push(convertedEntity);
+
+  	});
+
+
+	result.totalResults = parseInt(obj.Entities['$'].TotalResults);
+	return result;
 };
 
 qcApi.buildUrl = function(url, options){
