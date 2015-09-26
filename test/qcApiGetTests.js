@@ -17,7 +17,7 @@ describe("with qcApi", function(){
 
 		it("should throw an exception", function(done){
 
-			qcApi.getTests(function(err, tests){
+			qcApi.get('/tests/', {} , function(err, tests){
 
 				assert.isNotNull(err, null);
 				assert.equal(err.message, "Not yet logged in, please call login to authenticate.");
@@ -40,9 +40,19 @@ describe("with qcApi", function(){
 
 			it("should return all tests", function(done){
 
-				var tests = qcApi.getTests(function(err, tests){
+				qcApi.client = {
 
-					assert.isNull(err);
+					get: function(url, callback){
+						callback([1,2,3,4,5], { statusCode: 200 });
+					}
+
+				};
+
+				var tests = qcApi.get('/tests/', { fields: ['id', 'name'] }, function(err, tests){
+
+					if(err != null)
+						throw err;
+
 					assert.isNotNull(tests)
 					assert.lengthOf(tests, 5);
 					done();
