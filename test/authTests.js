@@ -1,8 +1,7 @@
 var chai = require('chai');
-
 var qcApi = require("../qcApi.js");
-
 var assert = chai.assert;
+var api;
 var mockedClient;
 
 function MockedClient() { 
@@ -11,16 +10,16 @@ function MockedClient() {
 	}.bind(this);
 };
 
-qcApi.getClient = function(args){
-	mockedClient.setArgs(args);
-	return mockedClient;
-};
-
 describe('given a mocked service', function(){
 
 	beforeEach(function(){
 
 		mockedClient = new MockedClient({});
+		api = qcApi.create();
+		api.getClient = function(args){
+			mockedClient.setArgs(args);
+			return mockedClient;
+		};
 
 	});
 
@@ -45,13 +44,13 @@ describe('given a mocked service', function(){
 
 			};
 
-			qcApi.login({ server: "testserver", user: "testuser", password: "bigsecret"}, function(err, res){
+			api.login({ server: "testserver", user: "testuser", password: "bigsecret"}, function(err, res){
 
 				if(err != null)
 					throw err;
 
 				assert.isTrue(res);
-				assert.deepEqual({"test_cookie_name": "test_cookie_value"}, qcApi.authCookie);
+				assert.deepEqual({"test_cookie_name": "test_cookie_value"}, api.authCookie);
 				done();
 
 			});
@@ -64,7 +63,7 @@ describe('given a mocked service', function(){
 				callback("failed data", { statusCode: 401 });
 			};
 
-			qcApi.login({ server: "testserver", user: "testuser", password: "bigsecret"}, function(err, res){
+			api.login({ server: "testserver", user: "testuser", password: "bigsecret"}, function(err, res){
 
 				assert.isNull(res);
 				assert.isNotNull(err);
@@ -81,7 +80,7 @@ describe('given a mocked service', function(){
 				callback("failed data", { statusCode: 500 });
 			};
 
-			qcApi.login({ server: "testserver", user: "testuser", password: "bigsecret"}, function(err, res){
+			api.login({ server: "testserver", user: "testuser", password: "bigsecret"}, function(err, res){
 
 				assert.isNull(res);
 				assert.isNotNull(err);

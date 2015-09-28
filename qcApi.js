@@ -16,15 +16,15 @@ FailedRequestException = function(msg, statusCode, response, url){
 	this.name = "FailedRequestException";
 };
 
-var qcApi = {
-	isAuthenticated: false
+var qcApi = function(){
+	this.isAuthenticated = false;
 };
 
-qcApi.getClient = function(args){
+qcApi.prototype.getClient = function(args){
 	return new Client(args);
 };
 
-qcApi.trimSlash = function(url){
+qcApi.prototype.trimSlash = function(url){
 
 	if(url)
 	{
@@ -40,17 +40,17 @@ qcApi.trimSlash = function(url){
 	return url;
 };
 
-qcApi.prependSlash = function(url){
+qcApi.prototype.prependSlash = function(url){
 	return url[0] == '/' ? url : "/" + url;
 }
 
-qcApi.login = function(connInfo, callback){
+qcApi.prototype.login = function(connInfo, callback){
 
 	this.rootUrl = this.trimSlash(connInfo.server);
-
+	this.connInfo = connInfo;
 	this.client = this.getClient({user: connInfo.user, password: connInfo.password});
 
-	this.client.get(connInfo.server + "/authentication-point/authenticate", function handleAuthResponse(data, res){
+	this.client.get(this.rootUrl + "/authentication-point/authenticate", function handleAuthResponse(data, res){
 
 		if(res.statusCode == 200)
 		{
@@ -61,19 +61,22 @@ qcApi.login = function(connInfo, callback){
 		else if(res.statusCode == 401)
 		{
 			this.isAuthenticated = false;
-			callback(new InvalidAuthenticationException(util.format("Failed to authenticate '%s' against %s, please verify username and password are correct", connInfo.user, connInfo.server)), null);
+			callback(new InvalidAuthenticationException(util.format("Failed to authenticate '%s' against %s, please verify username and password are correct", connInfo.user, this.rootUrl)), null);
 		}
 		else
 		{
+
 			this.isAuthenticated = false;
-			callback(new InvalidAuthenticationException(util.format("Failed to authenticate '%s' against %s: status code %s", connInfo.user, connInfo.server, res.statusCode)), null);
+			var error = new InvalidAuthenticationException(util.format("Failed to authenticate '%s' against %s: status code %s", connInfo.user, this.rootUrl, res.statusCode));
+			error.response = data.toString('utf8');
+			callback(error, null);
 		}
 
 	}.bind(this));
 
 };
 
-qcApi.verifyAuthenticated = function(){
+qcApi.prototype.verifyAuthenticated = function(){
 	if(!this.isAuthenticated)
 		throw new InvalidAuthenticationException("Not yet logged in, please call login to authenticate.");
 }
@@ -83,7 +86,7 @@ qcApi.verifyAuthenticated = function(){
 * on the object instead of an object in the entities property list
 * @param {obj} Should be a javascript object returned from the node-rest-client, parsed from a REST call xml or json response
 */
-qcApi.convertResult = function(obj){
+qcApi.prototype.convertResult = function(obj){
 
 	if(obj.Entities == undefined)
 		return obj;
@@ -112,9 +115,9 @@ qcApi.convertResult = function(obj){
 	return result;
 };
 
-qcApi.buildUrl = function(url, options){
+qcApi.prototype.buildUrl = function(url, options){
 
-	url = this.rootUrl + this.prependSlash(url);
+	url = util.format("$s/rest/domains/$s/projects/$s", this.rootUrl, this.connInfo.domain, this.connInfo.project, this.prependSlash(url));
 
 	if(options)
 	{
@@ -139,7 +142,7 @@ qcApi.buildUrl = function(url, options){
 
 };
 
-qcApi.get = function(url, options, callback) {
+qcApi.prototype.get = function(url, options, callback) {
 
 	try
 	{
@@ -165,4 +168,8 @@ qcApi.get = function(url, options, callback) {
 
 
 
-module.exports = qcApi;
+module.exports = {
+	create: function(){
+		return new qcApi();
+	}
+};

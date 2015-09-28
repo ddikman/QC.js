@@ -1,6 +1,6 @@
 var chai = require('chai');
 
-var qcApi = require("../qcApi.js");
+var qcApi = require("../qcApi.js").create();
 
 var assert = chai.assert;
 
