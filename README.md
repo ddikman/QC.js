@@ -85,15 +85,15 @@ qcApi.get('/domains/mydomain/projects/').then(...)
 Returns a promise, the success method argument will be a list of entities (see below) parsed from the service response (if the API could parse the result).
 
 Takes a url, either relative to the *qcbin/rest/* url or relative to the *qcbin/rest/domains/**userdomain**/projects/**userproject/* url if a domain and project was given on login.
-Possible args are:
-##### pageSize
-[integer/string] How many items to retrieve or 'max' to get as many as allowed by the ALM instance (can be configured in site administration interface).
-##### page
+#### args
+###### pageSize
+*[integer/string]* How many items to retrieve or 'max' to get as many as allowed by the ALM instance (can be configured in site administration interface).
+###### page
 *Not yet implemeted*
-##### fields
-[Array] Which fields to retrieve, using this can greatly improve API speed. Skipping description fields etc lessens the size of the response body.
+###### fields
+*[Array]* Which fields to retrieve, using this can greatly improve API speed. Skipping description fields etc lessens the size of the response body.
 ****
-##### filter
+###### filter
 *Not yet implemented*
 
 #### Usage
