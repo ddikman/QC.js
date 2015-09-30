@@ -19,7 +19,7 @@ npm install git+https://github.com/ddikman/QC.js.git
 Each instance will create its own session on login.
 
 ``` javascript
-var qcApi = require('qcApi').create();
+var qcApi = require('qc.js').create();
 ```
 
 3. Login
