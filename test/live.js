@@ -19,42 +19,15 @@ describe('using a real live service', function(){
 
 	it('should be able to return a list of defects', function(done){
 
-		function runCall(err, successful){
-			
-			if(err)
-			{
-				logger.log(util.format("failed to login: %j", err));
-				return;
-			}
-
-			qcApi.get('/defects/', { pageSize: 'max' }, function(err, defects){
-
-				if(err)
-				{
-					logger.log(util.format("failed to get defects: %j", err));
-					return;
-				}
-
-				console.log("Found %s defects", defects.length);
-				defects.forEach(function(defect){
-					console.log(defect.name);
-				});
-
-				done();
-
-			});
-
-		};
-
 		qcApi.login(connInfo)
-		.then(function(res){
+			.then(function(res){
 
-			qcApi.get('/defects/', { pageSize: '10' })
-			.then(function(defects){
-				assert.equal(10, defects.length);
-			}).then(done, done);
+				qcApi.get('/defects/', { pageSize: '10' })
+				.then(function(defects){
+					assert.equal(10, defects.length);
+				}).then(done, done);
 
-		}, done);
+			}, done);
 
 	})
 
