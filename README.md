@@ -12,7 +12,7 @@ The API is fully asyncronous and uses Promises to avoid callback hell, see [prom
 
 1. First up install it to your node project, I've yet to create a public NPM project for it
 ``` shell
-npm install --save https://github.com/ddikman/QC.js.git
+npm install git+https://github.com/ddikman/QC.js.git
 ```
 
 2. Require and create an instance of the API
