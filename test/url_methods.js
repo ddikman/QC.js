@@ -4,7 +4,7 @@ var qcApi = require("../qcApi.js").create();
 
 var assert = chai.assert;
 
-describe('given the qcApi', function(){
+describe('on a newly created api instance', function(){
 
 	it('should remove end and start slash on trimSlash', function(){
 

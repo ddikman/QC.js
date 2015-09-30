@@ -1,15 +1,13 @@
 
 var data = {};
 
-
-data.connectionInfo = {
-	server: "http://192.168.25.185:8080/qcbin",
-	domain: "USEMANGO",
-	project: "FLIT_CURRENT",
-	user: "testuser1",
-	password: "tests"
+data.zeroEntities = {
+  "Entities": {
+    "$": {
+      "TotalResults": "0"
+    }
+  }
 };
-
 
 data.testsResponse = {
   "Entities": {

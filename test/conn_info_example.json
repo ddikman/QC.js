@@ -1,0 +1,7 @@
+{
+	"server": "http://youralminstancehostname:8080/qcbin",
+	"domain": "DEFAULT",
+	"project": "Project_Name",
+	"user": "username",
+	"password": "user password"
+}

@@ -1,7 +1,8 @@
 var chai = require('chai');
+
 var qcApi = require("../qcApi.js");
+
 var assert = chai.assert;
-var api;
 var mockedClient;
 
 function MockedClient() { 
@@ -15,6 +16,7 @@ describe('given a mocked service', function(){
 	beforeEach(function(){
 
 		mockedClient = new MockedClient({});
+
 		api = qcApi.create();
 		api.getClient = function(args){
 			mockedClient.setArgs(args);
@@ -36,7 +38,7 @@ describe('given a mocked service', function(){
 				callback("successful data", { 
 					headers: {
 						'set-cookie': [
-							'test_cookie_name=test_cookie_value'
+							'1st_cookie=1st_cookie_value'
 						]
 					},
 					statusCode: 200
@@ -44,16 +46,28 @@ describe('given a mocked service', function(){
 
 			};
 
-			api.login({ server: "testserver", user: "testuser", password: "bigsecret"}, function(err, res){
+			mockedClient.post = function(url, args, callback){
 
-				if(err != null)
-					throw err;
+				assert.equal("1st_cookie=1st_cookie_value", args.headers.cookie);
+				assert.equal("testserver/rest/site-session", url);
 
-				assert.isTrue(res);
-				assert.deepEqual({"test_cookie_name": "test_cookie_value"}, api.authCookie);
-				done();
+				callback("successful data", { 
+					headers: {
+						'set-cookie': [
+							'2nd_cookie=2nd_cookie_value'
+						]
+					},
+					statusCode: 201
+				});
 
-			});
+			};
+
+			api.login({ server: "testserver", user: "testuser", password: "bigsecret"})
+				.then(function(res){
+					assert.isTrue(res);
+					assert.equal("1st_cookie=1st_cookie_value;2nd_cookie=2nd_cookie_value", api.authCookie);
+				})
+				.then(done, done);
 
 		});
 
@@ -63,14 +77,12 @@ describe('given a mocked service', function(){
 				callback("failed data", { statusCode: 401 });
 			};
 
-			api.login({ server: "testserver", user: "testuser", password: "bigsecret"}, function(err, res){
-
-				assert.isNull(res);
-				assert.isNotNull(err);
-				assert.equal(err.message, "Failed to authenticate 'testuser' against testserver, please verify username and password are correct");
-				done();
-
-			});
+			api.login({ server: "testserver", user: "testuser", password: "bigsecret"})
+				.then(function(err) { throw 'Should result in error' })
+				.catch(function(err){
+					assert.isNotNull(err);
+					assert.equal(err.message, "Failed to authenticate 'testuser' against testserver, please verify username and password are correct");
+				}).then(done, done);
 
 		});
 
@@ -80,15 +92,12 @@ describe('given a mocked service', function(){
 				callback("failed data", { statusCode: 500 });
 			};
 
-			api.login({ server: "testserver", user: "testuser", password: "bigsecret"}, function(err, res){
-
-				assert.isNull(res);
-				assert.isNotNull(err);
-				assert.equal(err.message, "Failed to authenticate 'testuser' against testserver: status code 500")
-				done();
-
-			});
-
+			api.login({ server: "testserver", user: "testuser", password: "bigsecret"})
+				.then(function(err) { throw 'Should result in error' })
+				.catch(function(err){			
+					assert.isNotNull(err);
+					assert.equal(err.message, "Failed to authenticate 'testuser' against testserver: status code 500")
+				}).then(done, done);
 		});
 
 	});

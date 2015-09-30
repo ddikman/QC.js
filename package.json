@@ -32,6 +32,7 @@
   "dependencies": {
     "cookie": "^0.2.2",
     "node-rest-client": "^1.5.1",
+    "promise": "^7.0.4",
     "verify-callback": "^1.0.0"
   }
 }

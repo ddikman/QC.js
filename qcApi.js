@@ -1,4 +1,5 @@
 var verifyCallback = require('verify-callback');
+var Promise = require('promise');
 var cookies = require('cookie');
 var util = require('util');
 var Client = new require('node-rest-client').Client;
@@ -44,35 +45,66 @@ qcApi.prototype.prependSlash = function(url){
 	return url[0] == '/' ? url : "/" + url;
 }
 
-qcApi.prototype.login = function(connInfo, callback){
+qcApi.prototype.startSession = function(){
 
-	this.rootUrl = this.trimSlash(connInfo.server);
-	this.connInfo = connInfo;
-	this.client = this.getClient({user: connInfo.user, password: connInfo.password});
+	var promise = new Promise(function(resolve, reject){
 
-	this.client.get(this.rootUrl + "/authentication-point/authenticate", function handleAuthResponse(data, res){
+		this.client.post(this.rootUrl + "/rest/site-session", { headers: { cookie : this.authCookie } }, function(data, res){
 
-		if(res.statusCode == 200)
-		{
-			this.isAuthenticated = true;
-			this.authCookie = cookies.parse(res.headers['set-cookie'][0]);
-			callback(null, true);
-		}
-		else if(res.statusCode == 401)
-		{
-			this.isAuthenticated = false;
-			callback(new InvalidAuthenticationException(util.format("Failed to authenticate '%s' against %s, please verify username and password are correct", connInfo.user, this.rootUrl)), null);
-		}
-		else
-		{
+			if(res.statusCode != 201)
+			{
+				reject("Session start failed, status code " + res.statusCode);
+				return;
+			}
 
-			this.isAuthenticated = false;
-			var error = new InvalidAuthenticationException(util.format("Failed to authenticate '%s' against %s: status code %s", connInfo.user, this.rootUrl, res.statusCode));
-			error.response = data.toString('utf8');
-			callback(error, null);
-		}
+			this.authCookie += ";" + res.headers['set-cookie'].join(';');
+
+			resolve(true);
+
+		}.bind(this));
 
 	}.bind(this));
+
+	return promise;
+}
+
+qcApi.prototype.login = function(connInfo){
+
+	var promise = new Promise(function(resolve, reject){
+
+		this.rootUrl = this.trimSlash(connInfo.server);
+		this.connInfo = connInfo;
+		this.client = this.getClient({user: connInfo.user, password: connInfo.password});
+		this.domain = connInfo.domain;
+		this.project = connInfo.project;
+
+		this.client.get(this.rootUrl + "/authentication-point/authenticate", function handleAuthResponse(data, res){
+
+			if(res.statusCode == 200)
+			{
+				this.isAuthenticated = true;
+				this.authCookie = res.headers['set-cookie'].join(';');
+				this.startSession().then(resolve, reject);
+			}
+			else if(res.statusCode == 401)
+			{
+				this.isAuthenticated = false;
+				reject(new InvalidAuthenticationException(util.format("Failed to authenticate '%s' against %s, please verify username and password are correct", connInfo.user, this.rootUrl)));
+			}
+			else
+			{
+
+				this.isAuthenticated = false;
+				var error = new InvalidAuthenticationException(util.format("Failed to authenticate '%s' against %s: status code %s", connInfo.user, this.rootUrl, res.statusCode));
+				error.response = data.toString('utf8');
+				reject(error);
+			}
+
+		}.bind(this));
+
+	}.bind(this));
+
+	return promise;
 
 };
 
@@ -92,32 +124,40 @@ qcApi.prototype.convertResult = function(obj){
 		return obj;
 
 	var result = [];
+	result.totalResults = parseInt(obj.Entities['$'].TotalResults);
+
+	if(result.totalResults == 0)
+		return result;
 
 	obj.Entities.Entity.forEach(function(entity){
-
+	
 		var convertedEntity = {
 			type: entity['$'].Type
 		};
 
 		entity.Fields[0].Field.forEach(function(field){
-
 			var name = field['$'].Name;
-			var value = field.Value[0];
+			var value = field.Value ? field.Value[0] : null;
 			convertedEntity[name] = value;
 		});
 
 		result.push(convertedEntity);
-
   	});
 
-
-	result.totalResults = parseInt(obj.Entities['$'].TotalResults);
 	return result;
 };
 
 qcApi.prototype.buildUrl = function(url, options){
 
-	url = util.format("$s/rest/domains/$s/projects/$s", this.rootUrl, this.connInfo.domain, this.connInfo.project, this.prependSlash(url));
+	targetUrl = this.rootUrl + "/rest";
+	if(this.domain)
+	{
+		targetUrl += "/domains/" + this.domain;
+		if(this.project)
+			targetUrl += "/projects/" + this.project;
+	}
+	
+	targetUrl += this.prependSlash(url);
 
 	if(options)
 	{
@@ -134,36 +174,34 @@ qcApi.prototype.buildUrl = function(url, options){
 		if(queryString.length > 0)
 		{
 			var appendCharacter = url.indexOf('?') >= 0 ? '&' : '?';
-			url = url + appendCharacter + queryString.join('&');
+			targetUrl = targetUrl + appendCharacter + queryString.join('&');
 		}
 	}
 
-	return url;
+	return targetUrl;
 
 };
 
-qcApi.prototype.get = function(url, options, callback) {
+qcApi.prototype.get = function(url, options) {
+ 
+	var promise = new Promise(function(resolve, reject){
 
-	try
-	{
-		verifyCallback(callback);
 		this.verifyAuthenticated();
 
 		url = this.buildUrl(url, options);
 
-		this.client.get(url, function handleGetResponse(data, res){
+		this.client.get(url, { headers: { cookie: this.authCookie } }, function handleGetResponse(data, res){
 
 			if(res.statusCode != 200)
-				callback(new FailedRequestException("Failed to process url", res.statusCode, data.toString('utf8'), url));			
+				reject(new FailedRequestException("Failed to process url", res.statusCode, data.toString('utf8'), url));			
 			else
-				callback(null, this.convertResult(data));
+				resolve(this.convertResult(data));
 
 		}.bind(this));
-	}
-	catch(err){
-		callback(err, null);
-	}
 
+	}.bind(this));
+
+	return promise;
 };
 
 
