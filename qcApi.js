@@ -59,7 +59,7 @@ qcApi.prototype.startSession = function(){
 
 			this.authCookie += ";" + res.headers['set-cookie'].join(';');
 
-			resolve(true);
+			resolve();
 
 		}.bind(this));
 

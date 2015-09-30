@@ -63,8 +63,7 @@ describe('given a mocked service', function(){
 			};
 
 			api.login({ server: "testserver", user: "testuser", password: "bigsecret"})
-				.then(function(res){
-					assert.isTrue(res);
+				.then(function(){
 					assert.equal("1st_cookie=1st_cookie_value;2nd_cookie=2nd_cookie_value", api.authCookie);
 				})
 				.then(done, done);
