@@ -92,7 +92,6 @@ Takes a url, either relative to the *qcbin/rest/* url or relative to the *qcbin/
 *Not yet implemeted*
 ###### fields
 *[Array]* Which fields to retrieve, using this can greatly improve API speed. Skipping description fields etc lessens the size of the response body.
-****
 ###### filter
 *Not yet implemented*
 
