@@ -1,4 +1,3 @@
-var verifyCallback = require('verify-callback');
 var Promise = require('promise');
 var cookies = require('cookie');
 var util = require('util');
@@ -35,7 +34,7 @@ qcApi.prototype.trimSlash = function(url){
 		if(url.length > 0 && url[url.length - 1] == '/')
 			url = url.substr(0, url.length - 1);
 		if(url.length > 0 && url[0] == '/')
-			url = url.substr(1, url.length);		
+			url = url.substr(1, url.length);
 	}
 
 	return url;
@@ -130,7 +129,7 @@ qcApi.prototype.convertResult = function(obj){
 		return result;
 
 	obj.Entities.Entity.forEach(function(entity){
-	
+
 		var convertedEntity = {
 			type: entity['$'].Type
 		};
@@ -156,7 +155,7 @@ qcApi.prototype.buildUrl = function(url, options){
 		if(this.project)
 			targetUrl += "/projects/" + this.project;
 	}
-	
+
 	targetUrl += this.prependSlash(url);
 
 	if(options)
@@ -183,7 +182,7 @@ qcApi.prototype.buildUrl = function(url, options){
 };
 
 qcApi.prototype.get = function(url, options) {
- 
+
 	var promise = new Promise(function(resolve, reject){
 
 		this.verifyAuthenticated();
@@ -193,7 +192,7 @@ qcApi.prototype.get = function(url, options) {
 		this.client.get(url, { headers: { cookie: this.authCookie } }, function handleGetResponse(data, res){
 
 			if(res.statusCode != 200)
-				reject(new FailedRequestException("Failed to process url", res.statusCode, data.toString('utf8'), url));			
+				reject(new FailedRequestException("Failed to process url", res.statusCode, data.toString('utf8'), url));
 			else
 				resolve(this.convertResult(data));
 
