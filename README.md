@@ -88,8 +88,6 @@ Takes a url, either relative to the *qcbin/rest/* url or relative to the *qcbin/
 #### args
 ###### pageSize
 *[integer/string]* How many items to retrieve or 'max' to get as many as allowed by the ALM instance (can be configured in site administration interface).
-###### pageSize
-*[integer/string]* How many items to retrieve or 'max' to get as many as allowed by the ALM instance (can be configured in site administration interface).
 ###### page
 *Not yet implemeted*
 ###### startIndex
